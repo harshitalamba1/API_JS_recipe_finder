@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe App</title>
+    <script src="https://kit.fontawesome.com/ceaaa7369e.js" crossorigin="anonymous"></script>
+    <style>
+        *{
+            margin:0px;
+            padding:0px;
+            box-sizing:border-box;
+            font-family:Verdana, Geneva, Tahoma, sans-serif
+        }
+        body{
+            background-color:#2b1b0f;
+            color: #ffff;
+        }
+        header nav{
+            background-color:#212121;
+            padding:20px;
+            displaY:flex;
+            justify-content:space-between;
+            align-items:center; /**/
+            z-index:1;
+        }
+        header nav h1{
+            font-size: 26px;
+            font-weight:700;
+            letter-spacing:1px;
+            text-transform:uppercase;
+        }
+        .searchBox{
+            flex-grow:1;
+            margin-right:10px;
+            width:300px;
+            height:30px;
+        }
+        #search{
+            height:30px;
+            background-color:red;
+            color:white;
+            border-radius:5px;
+            margin:5px;
+            padding:4px;
+            cursor:pointer;
+        }
+        @media screen and (max-width:1000px){
+            header nav form{
+                width:80%;
+                margin-top:20px;
+            }
+            header nav{
+                flex-direction:column;
+                margin-top:20px;
+            }
+        }
+        h2{
+            text-align: center;
+        }
+        .recipe-container{
+            text-align: center;
+            display:grid;
+            grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+            grid-gap:40px;
+            margin-top:20px;
+            place-items:center;
+            width:80%;
+            margin:10px auto;
+        }
+        .recipe{
+            background-color: #ffff;
+            color:black;
+            margin:20px;
+            display: flex;
+            flex-direction: column;
+            border-radius:6px;
+            box-shadow:2px 5px 10px burlywood;/**/
+            max-width:350px;
+            cursor:pointer;
+            /* height:1fr; */
+        }
+        .recipe button{
+            background-color: red;
+            color:white;
+            padding:15px;
+            border-radius: 20px;
+            font-size: 20px;
+            cursor:pointer;
+            margin:18px auto;
+            /* cursor:pointer; */
+        }
+        .recipe button:hover{
+            font-size:24px;
+            color:aliceblue;
+
+        }
+        .recipe-details{
+            display:none;
+            position:fixed;
+            top:5%;
+            left:30%;
+            background-color:  #694c2f;
+            /* height:400px; */
+            /* width:400px; */
+            border-radius:10px;
+            font-size:20px;
+            padding:20px;
+            /* overflow:scroll; */
+            overflow: auto;
+            height: 70vh;
+            max-width: 1200px;
+        }
+        .recipe-close-btn{
+            display:block;
+            width:40px;
+        }
+        .ingredients{
+            background-color:bisque;
+            border-radius:2px;
+        }
+        .close{
+            padding:10px;
+            border:2px solid black;
+            border-radius:10px;
+            position:relative;
+        }
+        .ingred{
+            padding:10px;
+            border:2px solid black;
+            border-radius:10px;
+            /* margin:10px; */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>Recipe App</h1>
+            <form>
+                <input type="text" placeholder="search for recipes" class="searchBox">
+                <button id="search" type="button">Search</button>
+            </form>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <div class="recipe-container">
+                <h2>Search your favourite recipes</h2>
+            </div>
+            <div class="recipe-details">
+            </div>
+        </section>
+    </main>
+</body>
+<script>
+    const searchBox=document.querySelector(".searchBox");
+    const search=document.querySelector("#search");
+    const recipecontainer=document.querySelector(".recipe-container");
+    const recipeDetails=document.querySelector('.recipe-details');
+    
+    const fetchRecipes=async (query)=> {
+        recipecontainer.innerHTML="<h2>Fetching Recipe...</h2>"
+        const data=await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`);
+        const response=await data.json();
+        console.log(response);
+        recipecontainer.innerHTML="";
+    
+    response.meals.forEach(meal=>{
+        const recipeDiv=document.createElement('div');
+        recipeDiv.className="recipe";
+        recipeDiv.innerHTML=`
+        <img src="${meal.strMealThumb}">
+        <h3>${meal.strMeal}</h3>
+        <p>${meal.strArea} Dish</p>
+        <p>${meal.strCategory}</p>
+        `
+        const button=document.createElement("button");
+        button.textContent='VIEW RECIPE';
+        recipeDiv.appendChild(button);
+        recipecontainer.appendChild(recipeDiv);
+        button.addEventListener("click",()=>{
+            openRecipePopup(meal);
+    });
+});}
+
+const openRecipePopup=(meal)=>{
+    recipeDetails.innerHTML=`
+    <button type="button" class="recipe-close-btn">
+    <i class="fa-solid fa-x"></i>
+                </button>
+    <h2>${meal.strMeal}</h2><br>
+    <p id="para">${meal.strInstructions}</p>
+    <br><br>
+    <button class="close">Close</button>
+    <button class="ingred">Ingredients</button>
+    `
+    const ingred=document.querySelector(".ingred");
+    ingred.addEventListener("click",()=>{
+        let ingredientList = ''; 
+        for(i=1;i<=20;i++){
+            const ingredient = meal[`strIngredient${i}`];
+            if (ingredient) { // Check if the ingredient exists
+            ingredientList += `<li>${ingredient}</li>`;
+        }
+    recipeDetails.innerHTML = `<ul>${ingredientList}</ul><br><br>`; 
+    const btn=document.createElement("button");
+    btn.innerHTML="Back";
+    btn.style.padding="5px";
+    btn.style.margin="2px solid black";
+    btn.style.borderRadius="4px";
+    recipeDetails.append(btn);
+    btn.addEventListener("click",()=>{
+        recipeDetails.innerHTML=`
+    <button type="button" class="recipe-close-btn">
+    <i class="fa-solid fa-x"></i>
+                </button>
+    <h2>${meal.strMeal}</h2><br>
+    <p id="para">${meal.strInstructions}</p>
+    <br><br>
+    <button class="close">Close</button>
+    <button class="ingred">Ingredients</button>
+    `
+    const close=document.querySelector(".close");
+    close.addEventListener("click",()=>{
+        recipeDetails.style.display="none";
+    //     const closeButton=document.querySelector('.recipe-close-btn');
+    // recipeDetails.style.display="block";
+    
+    // closeButton.addEventListener("click",()=>{
+    //     recipeDetails.style.display="none";
+    // })
+    })
+    const closeButton=document.querySelector('.recipe-close-btn');
+    closeButton.addEventListener("click",()=>{
+        recipeDetails.style.display="none";
+    })
+    })
+    } 
+        });
+    const close=document.querySelector(".close");
+    close.addEventListener("click",()=>{
+        recipeDetails.style.display="none";
+    })
+    const ingredientsbtn=document.querySelector('.ingredients');
+    const closeButton=document.querySelector('.recipe-close-btn');
+    recipeDetails.style.display="block";
+    
+    closeButton.addEventListener("click",()=>{
+        recipeDetails.style.display="none";
+    })
+    const para=document.querySelector('#para');
+    ingredientsbtn.addEventListener("click",()=>{
+        para.style.display="none";
+        const ingredients=document.createElement("div");
+        ingredients.innerHTML=" ";
+    });
+}
+    search.addEventListener("click",(event)=>{
+        event.preventDefault();
+        const searchInput=searchBox.value.trim();
+        if(searchInput===""){
+            recipecontainer.innerHTML="Error While fetching...";
+        }
+        else{
+        fetchRecipes(searchInput);
+        }
+    })
+    
+</script>
+</html>
